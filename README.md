@@ -1,8 +1,17 @@
 # Frontend-Integration Project
-This Project basically deals with creating a Metamask wallet for minting/deposit and withdrawing a token by using the local account address given by hardhat. In this i am deploying my contract to a local host network and connecting my wallet for dummy transfer and deposit.
-# Additional Functionalites
-1. Tracking the last transactions date and time.
-2. Dynamic transfer means we can transact any number of token by using custom scrool button and input box.
+The ChristmasGiftExchange smart contract is a decentralized application designed to facilitate a fun and interactive gifting experience on the Ethereum blockchain. It allows users to give and receive gifts while tracking the total number of gifts exchanged.
+
+# Key Features:
+
+Gift Management: Users can increase the total number of gifts by giving gifts and decrease it by receiving gifts. This simple mechanism encourages participation in the gifting process.
+
+Event Emissions: The contract emits events whenever a gift is given or received, providing transparency and allowing users to track activities within the exchange.
+
+State Tracking: The contract maintains a record of:
+
+Total gifts available for exchange.
+Total gifts given by users.
+Total gifts received by users.
 ### Getting Started
 ## Installation/Running this project
 After cloning the github, you will want to do the following to get the code running on your computer.
