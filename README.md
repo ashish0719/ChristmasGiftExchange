@@ -12,6 +12,9 @@ State Tracking: The contract maintains a record of:
 Total gifts available for exchange.
 Total gifts given by users.
 Total gifts received by users.
+
+# Frontend Overlook
+http://localhost:3000/
 ### Getting Started
 ## Installation/Running this project
 After cloning the github, you will want to do the following to get the code running on your computer.
