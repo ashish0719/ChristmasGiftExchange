@@ -52,18 +52,6 @@ export default function App() {
       signer
     );
     setContract(contractInstance);
-
-    // Listen for the GiftGiven event
-    contractInstance.on("GiftGiven", (giver) => {
-      console.log(`${giver} has given a gift!`);
-      setGiftsGiven((prev) => prev + 1); // Update gifts given
-    });
-
-    // Listen for the GiftReceived event (if you implement this)
-    contractInstance.on("GiftReceived", (receiver) => {
-      console.log(`${receiver} has received a gift!`);
-      setGiftsReceived((prev) => prev + 1); // Update gifts received
-    });
   };
 
   const getTotalGifts = async () => {
@@ -78,7 +66,7 @@ export default function App() {
       const tx = await contract.giveGift();
       await tx.wait();
       getTotalGifts(); // Fetch total gifts after giving a gift
-      setGiftsGiven((prev) => prev + 1); // Increment locally as well
+      // Removed local increment of giftsGiven
     }
   };
 
@@ -87,11 +75,10 @@ export default function App() {
       const tx = await contract.receiveGift();
       await tx.wait();
       getTotalGifts(); // Fetch total gifts after receiving a gift
-      setGiftsReceived((prev) => prev + 1); // Increment locally as well
+      // Removed local increment of giftsReceived
     }
   };
 
-  // Move the initUser function definition here
   const initUser = () => {
     if (!ethWallet) {
       return (
@@ -129,8 +116,27 @@ export default function App() {
   useEffect(() => {
     if (account) {
       getTotalGifts();
+
+      const handleGiftGiven = (giver) => {
+        console.log(`${giver} has given a gift!`);
+        setGiftsGiven((prev) => prev + 1); // Update only here
+      };
+
+      const handleGiftReceived = (receiver) => {
+        console.log(`${receiver} has received a gift!`);
+        setGiftsReceived((prev) => prev + 1); // Update only here
+      };
+
+      contract?.on("GiftGiven", handleGiftGiven);
+      contract?.on("GiftReceived", handleGiftReceived);
+
+      // Cleanup function to remove listeners
+      return () => {
+        contract?.off("GiftGiven", handleGiftGiven);
+        contract?.off("GiftReceived", handleGiftReceived);
+      };
     }
-  }, [account]); // Dependency array: runs when 'account' changes
+  }, [account, contract]); // Add contract as a dependency
 
   useEffect(() => {
     getWallet();
