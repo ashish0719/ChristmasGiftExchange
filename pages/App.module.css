@@ -1,0 +1,38 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh; /* Ensure it takes full height of the viewport */
+  background-image: url("https://t4.ftcdn.net/jpg/05/37/80/71/360_F_537807152_yDAOJ9EYB0dl78PjZRY15mFlG3iVN6Qw.jpg"); /* Replace with your image path */
+  background-size: cover; /* Cover the entire area */
+  background-position: center; /* Center the image */
+  background-repeat: no-repeat; /* Prevent image from repeating */
+  color: #fff; /* Change text color to white for better contrast */
+}
+
+.button {
+  background-color: #e74c3c; /* Christmas red */
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-size: 1rem;
+  margin: 10px;
+}
+
+.button:hover {
+  background-color: #c0392b; /* Darker red on hover */
+}
+
+.text {
+  font-size: 1.2rem;
+  color: #fff; /* Change text color to white for better contrast */
+}
+
+.header {
+  font-size: 2.5rem;
+  color: #ffd700; /* Golden color for the header */
+}
