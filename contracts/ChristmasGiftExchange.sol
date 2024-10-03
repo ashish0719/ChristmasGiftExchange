@@ -5,17 +5,17 @@ pragma solidity ^0.8.17;
 import "hardhat/console.sol";
 
 contract ChristmasGiftExchange {
-    uint public totalGifts;
-    uint public totalGiftsGiven;
-    uint public totalGiftsReceived;
+    uint256 public totalGifts;
+    uint256 public totalGiftsGiven;
+    uint256 public totalGiftsReceived;
 
     event GiftGiven(address indexed giver);
     event GiftReceived(address indexed receiver);
 
-    constructor(uint initialGifts) {
+    constructor(uint256 initialGifts) {
         totalGifts = initialGifts;
-        totalGiftsGiven = 0; // Initialize total gifts given
-        totalGiftsReceived = 0; // Initialize total gifts received
+        totalGiftsGiven = 0;
+        totalGiftsReceived = 0;
         console.log("Welcome to the Christmas Gift Exchange!");
     }
 
