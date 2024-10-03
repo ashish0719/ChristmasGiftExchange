@@ -1,29 +1,28 @@
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
-import atm_abi from "../artifacts/contracts/Assessment.sol/Assessment.json";
-import styles from "./styles.module.css"; // Import CSS module
+import contractAbi from "../artifacts/contracts/ChristmasGiftExchange.sol/ChristmasGiftExchange.json";
+import styles from "./App.module.css"; // Import the CSS module
 
-export default function HomePage() {
+export default function App() {
   const [ethWallet, setEthWallet] = useState(undefined);
   const [account, setAccount] = useState(undefined);
-  const [atm, setATM] = useState(undefined);
-  const [balance, setBalance] = useState(undefined);
-  const [depositAmount, setDepositAmount] = useState("1"); // Use string for input value
-  const [withdrawAmount, setWithdrawAmount] = useState("1"); // Use string for input value
-  const [transactions, setTransactions] = useState([]);
-  const [lastTransactionTime, setLastTransactionTime] = useState("");
-
+  const [contract, setContract] = useState(undefined);
+  const [giftCount, setGiftCount] = useState(0); // Initialize to 0
+  const [giftsGiven, setGiftsGiven] = useState(0); // Initialize to 0
+  const [giftsReceived, setGiftsReceived] = useState(0); // Initialize to 0
   const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
-  const atmABI = atm_abi.abi;
 
-  // Get the MetaMask wallet
   const getWallet = async () => {
     if (window.ethereum) {
       setEthWallet(window.ethereum);
     }
+
+    if (ethWallet) {
+      const accounts = await ethWallet.request({ method: "eth_accounts" });
+      handleAccount(accounts);
+    }
   };
 
-  // Handle account connection
   const handleAccount = (accounts) => {
     if (accounts && accounts.length > 0) {
       console.log("Account connected: ", accounts[0]);
@@ -33,169 +32,105 @@ export default function HomePage() {
     }
   };
 
-  // Connect to MetaMask and get the contract instance
   const connectAccount = async () => {
     if (!ethWallet) {
       alert("MetaMask wallet is required to connect");
       return;
     }
 
-    try {
-      const accounts = await ethWallet.request({
-        method: "eth_requestAccounts",
-      });
-      handleAccount(accounts);
-      getATMContract();
-    } catch (error) {
-      console.error("Error connecting to MetaMask:", error);
-    }
+    const accounts = await ethWallet.request({ method: "eth_requestAccounts" });
+    handleAccount(accounts);
+    getContractInstance();
   };
 
-  // Get the contract instance
-  const getATMContract = () => {
+  const getContractInstance = () => {
     const provider = new ethers.providers.Web3Provider(ethWallet);
     const signer = provider.getSigner();
-    const atmContract = new ethers.Contract(contractAddress, atmABI, signer);
-    setATM(atmContract);
+    const contractInstance = new ethers.Contract(
+      contractAddress,
+      contractAbi.abi,
+      signer
+    );
+    setContract(contractInstance);
+
+    // Listen for the GiftGiven event
+    contractInstance.on("GiftGiven", (giver) => {
+      console.log(`${giver} has given a gift!`);
+      setGiftsGiven((prev) => prev + 1); // Update gifts given
+    });
+
+    // Listen for the GiftReceived event (if you implement this)
+    contractInstance.on("GiftReceived", (receiver) => {
+      console.log(`${receiver} has received a gift!`);
+      setGiftsReceived((prev) => prev + 1); // Update gifts received
+    });
   };
 
-  // Get the balance from the contract
-  const getBalance = async () => {
-    if (atm) {
-      try {
-        const balanceBigNumber = await atm.getBalance();
-        setBalance(ethers.utils.formatEther(balanceBigNumber)); // Convert from wei to ether
-      } catch (error) {
-        console.error("Error fetching balance:", error);
-      }
+  const getTotalGifts = async () => {
+    if (contract) {
+      const totalGifts = await contract.getTotalGifts();
+      setGiftCount(parseInt(totalGifts._hex));
     }
   };
 
-  // Deposit amount to the contract
-  const deposit = async () => {
-    if (atm) {
-      try {
-        const amountInEther = ethers.utils.parseEther(depositAmount);
-        const tx = await atm.deposit(amountInEther);
-        await tx.wait();
-        setTransactions([
-          ...transactions,
-          { type: "Deposit", amount: depositAmount, txHash: tx.hash },
-        ]);
-        getBalance();
-      } catch (error) {
-        console.error("Error depositing:", error);
-      }
+  const giveGift = async () => {
+    if (contract) {
+      const tx = await contract.giveGift();
+      await tx.wait();
+      getTotalGifts(); // Fetch total gifts after giving a gift
+      setGiftsGiven((prev) => prev + 1); // Increment locally as well
     }
   };
 
-  // Withdraw amount from the contract
-  const withdraw = async () => {
-    if (atm) {
-      try {
-        const amountInEther = ethers.utils.parseEther(withdrawAmount);
-        const tx = await atm.withdraw(amountInEther);
-        await tx.wait();
-        setTransactions([
-          ...transactions,
-          { type: "Withdraw", amount: withdrawAmount, txHash: tx.hash },
-        ]);
-        getBalance();
-      } catch (error) {
-        console.error("Error withdrawing:", error);
-      }
+  const receiveGift = async () => {
+    if (contract) {
+      const tx = await contract.receiveGift();
+      await tx.wait();
+      getTotalGifts(); // Fetch total gifts after receiving a gift
+      setGiftsReceived((prev) => prev + 1); // Increment locally as well
     }
   };
 
-  // Get the last transaction time
-  const getLastTransactionTime = async () => {
-    if (atm) {
-      try {
-        const txTimestamp = await atm.getLastTransactionTime();
-        const time = new Date(txTimestamp.toNumber() * 1000);
-        setLastTransactionTime(time.toLocaleString());
-      } catch (error) {
-        console.error("Error fetching last transaction time:", error);
-      }
-    }
-  };
-
-  // Initialize user interface
+  // Move the initUser function definition here
   const initUser = () => {
     if (!ethWallet) {
-      return <p>Please install MetaMask to use this ATM.</p>;
+      return (
+        <p className={styles.text}>
+          Please install MetaMask to interact with this contract.
+        </p>
+      );
     }
 
     if (!account) {
       return (
-        <button className={styles.connectButton} onClick={connectAccount}>
-          Please connect your MetaMask wallet
+        <button className={styles.button} onClick={connectAccount}>
+          Connect MetaMask
         </button>
       );
     }
 
-    if (balance === undefined) {
-      getBalance();
-    }
-
     return (
       <div>
-        <p>Your Account: {account}</p>
-        <p className={styles.balance}>Your Balance: {balance} ETH</p>
-        <div className={styles.buttonContainer}>
-          <div>
-            <input
-              type="number"
-              value={depositAmount}
-              onChange={(e) => setDepositAmount(e.target.value)}
-              className={styles.amountInput}
-              placeholder="Deposit Amount"
-            />
-            <button className={styles.actionButton} onClick={deposit}>
-              Deposit {depositAmount} ETH
-            </button>
-          </div>
-          <div>
-            <input
-              type="number"
-              value={withdrawAmount}
-              onChange={(e) => setWithdrawAmount(e.target.value)}
-              className={styles.amountInput}
-              placeholder="Withdraw Amount"
-            />
-            <button className={styles.actionButton} onClick={withdraw}>
-              Withdraw {withdrawAmount} ETH
-            </button>
-          </div>
-        </div>
-        {renderTransactionHistory()}
+        <p className={styles.text}>Your Account: {account}</p>
+        <p className={styles.text}>Total Gifts: {giftCount}</p>
+        <p className={styles.text}>Total Gifts Given: {giftsGiven}</p>
+        <p className={styles.text}>Total Gifts Received: {giftsReceived}</p>
+        <button className={styles.button} onClick={giveGift}>
+          Give Gift
+        </button>
+        <button className={styles.button} onClick={receiveGift}>
+          Receive Gift
+        </button>
       </div>
     );
   };
 
-  // Render transaction history and last transaction time
-  const renderTransactionHistory = () => {
-    return (
-      <div className={styles.transactionHistory}>
-        <h2>Transaction History</h2>
-        <ul>
-          {transactions.map((tx, index) => (
-            <li key={index}>
-              {tx.type} {tx.amount} ETH - Tx Hash: {tx.txHash}
-            </li>
-          ))}
-        </ul>
-        <h2>Last Transaction Time</h2>
-        <button
-          className={styles.actionButton}
-          onClick={getLastTransactionTime}
-        >
-          Show Last Transaction Time
-        </button>
-        <p>Last Transaction Time: {lastTransactionTime}</p>
-      </div>
-    );
-  };
+  // Effect to get total gifts when account changes
+  useEffect(() => {
+    if (account) {
+      getTotalGifts();
+    }
+  }, [account]); // Dependency array: runs when 'account' changes
 
   useEffect(() => {
     getWallet();
@@ -204,7 +139,9 @@ export default function HomePage() {
   return (
     <main className={styles.container}>
       <header>
-        <h1>Welcome to the Metacrafters ATM!</h1>
+        <h1 className={styles.header}>
+          Welcome to the Christmas Gift Exchange!
+        </h1>
       </header>
       {initUser()}
     </main>
